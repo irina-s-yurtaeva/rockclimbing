@@ -1,0 +1,68 @@
+services:
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    image: irayu/php
+    container_name: 'otus-php-fpm'
+    volumes:
+      - ./code:/data/otus.yu
+      - ./logs/php:/var/log/php
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_HOST: 'otus-postgres'
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # for symfony only
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@otus-postgres:5432/${DB_NAME}
+    ports:
+      - '9000:9000'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - otus-network
+
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    image: irayu/nginx
+    container_name: 'otus-nginx'
+    working_dir: /data
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./code:/data/otus.yu
+      - ./docker/nginx/hosts/otus.conf:/etc/nginx/conf.d/otus.conf
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - php-fpm
+    networks:
+      - otus-network
+
+  postgres:
+    image: postgres:15
+    ports:
+      - 5432:5432
+    container_name: 'otus-postgres'
+    working_dir: /data
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dump:/data/dump
+      - postgresql:/var/lib/postgresql/data
+    networks:
+      - otus-network
+
+volumes:
+  dump:
+  postgresql:
+
+networks:
+  otus-network:
+    driver: bridge
