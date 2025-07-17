@@ -50,3 +50,17 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+
+
+###> symfony/framework-bundle ###
+/code/.env.local
+/code/.env.local.php
+/code/.env.*.local
+/code/config/secrets/prod/prod.decrypt.private.php
+/code/public/bundles/
+/code/var/
+/code/vendor/
+###< symfony/framework-bundle ###
+
+.idea/*
+/logs/
